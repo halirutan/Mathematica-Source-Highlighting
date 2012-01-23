@@ -1,0 +1,6 @@
+The JavaScript can be opened with Google Chrome and is then installed as a local extension.
+When you browse pages under http://stackoverflow.com/questions/ and have Mathematica code posted
+on the page its style is replaced and you should see nice code highlighting.
+
+The JavaScript was written by Tim Stone and I only added the rules for the lexical scanner and
+colors which go along with the page colors of StackOverflow.

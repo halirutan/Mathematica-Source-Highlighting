@@ -3,8 +3,24 @@
 // @description   Adds simple Mathematica highlighting on SO and Mathematica as a POC
 // @include       http://stackoverflow.com/questions/*
 // @include       http://mathematica.stackexchange.com/questions/*
-// @author        @TimStone (regexp and colors changed by @halirutan)
+// @author        @TimStone (regexp and colors by @halirutan (Patrick))
 // ==/UserScript==
+
+// History:
+//
+// 01/30/2012 Fixed missing '?' in the operator list. Included named-characters like \[Gamma] to give a complete match
+// for such symbols. Improved the matching of patterns. Added matching of context constructions like Developer`PackedArrayQ.
+// Switch of the color-scheme due to many requests. Now it's like in the Mathematica-frontend. Keywords black, variables blue.
+//
+// 01/29/2012 (Tim) make it work for stackexchange
+//
+// 01/25/2012 (Patrick) Added the recognition of Mathematica-numbers. This should now highlight things like
+// {1, 1.0, 1., .12, 16^^1.34f, ...}. Additionally it should recognize the backtick behind a number.
+// I switched comments and strings to gray and use a dark red for the numbers.
+//
+// 01/23/2012 Initial version.
+//
+
 
 function inject(f) {
     if (!/^\/questions\/(\d+|ask)/.test(window.location.pathname)) {
@@ -38,14 +54,25 @@ inject(function () {
                 var style = document.createElement('style'), blocks;
                 
                 style.type = 'text/css';
-                style.textContent = 
-                    '.lang-mathematica .str { color: #666 }  /* string content */' +
-                    '.lang-mathematica .com { color: #666 }  /* a comment */' +
-                    '.lang-mathematica .kwd { color: #07c }  /* a keyword, in SO blue*/' +
-                    '.lang-mathematica .atv { color: #383 }  /* Blank constructs with variables and slots */' +
-                    '.lang-mathematica .tag { color: #000; font-weight: bold; }  /* a markup tag name */' +
-                    '.lang-mathematica .lit { color: #833 }  /* a literal value */' +
-                    '.lang-mathematica .pln { color: #000 }  /* a literal value */';
+                style.textContent =
+                    // string content
+                    '.lang-mathematica .str { color: #833 }' +
+                    // a comment
+                    '.lang-mathematica .com { color: #555 }' +
+                    // a keyword, in SO blue
+                    '.lang-mathematica .kwd { color: #000 }' +
+                    // Blank constructs with variables and slots
+                    '.lang-mathematica .atv { color: #006600; font-style: italic; }' +
+                    // Named characters like \[Gamma] or \[Alpha]
+                    '.lang-mathematica .atn { color: #2C5893; }' +
+                    // Braces, brackets and curly braces
+                    '.lang-mathematica .tag { color: #000; font-weight: bold; }' +
+                    // Numbers 1 16^^234f
+                    '.lang-mathematica .lit { color: #833 }' +
+                    // everything else, variable names, function names
+                    '.lang-mathematica .pln { color: #326AB3 }' +
+                    // operators + - @ @@ /. ...
+                    '.lang-mathematica .pun  { color: #000; }';
 
                 document.getElementsByTagName('head')[0].appendChild(style);
             
@@ -145,7 +172,129 @@ inject(function () {
             'VarianceTest|VectorAngle|VectorColorFunction|VectorColorFunctionScaling|VectorDensityPlot|VectorGlyphData|VectorPlot|VectorPlot3D|VectorPoints|VectorQ|VectorScale|VectorStyle|Vee|Verbatim|Verbose|VerboseConvertToPostScriptPacket|VerifyConvergence|VerifySolutions|VerifyTestAssumptions|Version|VersionNumber|VertexAdd|VertexColors|VertexComponent|VertexCoordinateRules|VertexCoordinates|VertexCount|VertexCoverQ|VertexDegree|VertexDelete|VertexEccentricity|VertexInComponent|VertexInDegree|VertexIndex|VertexLabeling|VertexLabels|VertexLabelStyle|VertexList|VertexNormals|VertexOutComponent|VertexOutDegree|VertexQ|VertexRenderingFunction|VertexReplace|VertexShape|VertexShapeFunction|VertexSize|VertexStyle|VertexTextureCoordinates|VertexWeight|'+
             'Vertical|VerticalBar|VerticalForm|VerticalSeparator|VerticalSlider|VerticalTilde|ViewAngle|ViewCenter|ViewMatrix|ViewPoint|ViewPointSelectorSettings|ViewPort|ViewRange|ViewVector|ViewVertical|VirtualGroupData|Visible|VisibleCell|VonMisesDistribution|WaitAll|WaitNext|WaitUntil|WakebyDistribution|WalleniusHypergeometricDistribution|WaringYuleDistribution|WatershedComponents|WatsonUSquareTest|WattsStrogatzGraphDistribution|WaveletBestBasis|WaveletFilterCoefficients|WaveletImagePlot|WaveletListPlot|WaveletMapIndexed|WaveletMatrixPlot|WaveletPhi|WaveletPsi|WaveletScale|WaveletScalogram|WaveletThreshold|WeatherData|WeberE|Wedge|WeibullDistribution|WeierstrassHalfPeriods|WeierstrassInvariants|WeierstrassP|WeierstrassPPrime|WeierstrassSigma|WeierstrassZeta|WeightedAdjacencyGraph|'+
             'WeightedAdjacencyMatrix|WeightedGraphQ|Weights|WheelGraph|Which|While|White|Whitespace|WhitespaceCharacter|WhittakerM|WhittakerW|WienerFilter|WignerD|WignerSemicircleDistribution|WindowClickSelect|WindowElements|WindowFloating|WindowFrame|WindowFrameElements|WindowMargins|WindowMovable|WindowOpacity|WindowSelected|WindowSize|WindowStatusArea|WindowTitle|WindowToolbars|WindowWidth|With|WolframAlpha|WolframAlphaDate|WolframAlphaQuantity|WolframAlphaResult|Word|WordBoundary|WordCharacter|WordData|WordSearch|WordSeparators|WorkingPrecision|Write|WriteString|Wronskian|XMLElement|XMLObject|Xnor|Xor|Yellow|YuleDissimilarity|ZernikeR';
-        
+
+        var namedCharacters = '\\\\\\[AAcute\\]|\\\\\\[ABar\\]|\\\\\\[ACup\\]|\\\\\\[ADoubleDot\\]|\\\\\\[AE\\]|\\\\\\[AGrave\\]|\\\\\\[AHat\\]|\\\\\\[Aleph\\]'+
+            '|\\\\\\[AliasDelimiter\\]|\\\\\\[AliasIndicator\\]|\\\\\\[AlignmentMarker\\]|\\\\\\[Alpha\\]|\\\\\\[AltKey\\]|\\\\\\[And\\]|\\\\\\[Angle\\]|'+
+            '\\\\\\[Angstrom\\]|\\\\\\[ARing\\]|\\\\\\[AscendingEllipsis\\]|\\\\\\[ATilde\\]|\\\\\\[AutoLeftMatch\\]|\\\\\\[AutoOperand\\]|\\\\\\[AutoPlaceholder\\]|\\\\\\[AutoRightMatch\\]'+
+            '|\\\\\\[AutoSpace\\]|\\\\\\[Backslash\\]|\\\\\\[BeamedEighthNote\\]|\\\\\\[BeamedSixteenthNote\\]|\\\\\\[Because\\]|\\\\\\[Bet\\]|\\\\\\[Beta\\]|'+
+            '\\\\\\[Breve\\]|\\\\\\[Bullet\\]|\\\\\\[CAcute\\]|\\\\\\[CapitalAAcute\\]|\\\\\\[CapitalABar\\]|\\\\\\[CapitalACup\\]|\\\\\\[CapitalADoubleDot\\]|\\\\\\[CapitalAE\\]'+
+            '|\\\\\\[CapitalAGrave\\]|\\\\\\[CapitalAHat\\]|\\\\\\[CapitalAlpha\\]|\\\\\\[CapitalARing\\]|\\\\\\[CapitalATilde\\]|\\\\\\[CapitalBeta\\]|\\\\\\[CapitalCAcute\\]|'+
+            '\\\\\\[CapitalCCedilla\\]|\\\\\\[CapitalCHacek\\]|\\\\\\[CapitalChi\\]|\\\\\\[CapitalDelta\\]|\\\\\\[CapitalDHacek\\]|\\\\\\[CapitalDifferentialD\\]|\\\\\\[CapitalDigamma\\]|\\\\\\[CapitalEAcute\\]'+
+            '|\\\\\\[CapitalEBar\\]|\\\\\\[CapitalECup\\]|\\\\\\[CapitalEDoubleDot\\]|\\\\\\[CapitalEGrave\\]|\\\\\\[CapitalEHacek\\]|\\\\\\[CapitalEHat\\]|\\\\\\[CapitalEpsilon\\]|'+
+            '\\\\\\[CapitalEta\\]|\\\\\\[CapitalEth\\]|\\\\\\[CapitalGamma\\]|\\\\\\[CapitalIAcute\\]|\\\\\\[CapitalICup\\]|\\\\\\[CapitalIDoubleDot\\]|\\\\\\[CapitalIGrave\\]|\\\\\\[CapitalIHat\\]'+
+            '|\\\\\\[CapitalIota\\]|\\\\\\[CapitalKappa\\]|\\\\\\[CapitalKoppa\\]|\\\\\\[CapitalLambda\\]|\\\\\\[CapitalLSlash\\]|\\\\\\[CapitalMu\\]|\\\\\\[CapitalNHacek\\]|'+
+            '\\\\\\[CapitalNTilde\\]|\\\\\\[CapitalNu\\]|\\\\\\[CapitalOAcute\\]|\\\\\\[CapitalODoubleAcute\\]|\\\\\\[CapitalODoubleDot\\]|\\\\\\[CapitalOE\\]|\\\\\\[CapitalOGrave\\]|\\\\\\[CapitalOHat\\]'+
+            '|\\\\\\[CapitalOmega\\]|\\\\\\[CapitalOmicron\\]|\\\\\\[CapitalOSlash\\]|\\\\\\[CapitalOTilde\\]|\\\\\\[CapitalPhi\\]|\\\\\\[CapitalPi\\]|\\\\\\[CapitalPsi\\]|'+
+            '\\\\\\[CapitalRHacek\\]|\\\\\\[CapitalRho\\]|\\\\\\[CapitalSampi\\]|\\\\\\[CapitalSHacek\\]|\\\\\\[CapitalSigma\\]|\\\\\\[CapitalStigma\\]|\\\\\\[CapitalTau\\]|\\\\\\[CapitalTHacek\\]'+
+            '|\\\\\\[CapitalTheta\\]|\\\\\\[CapitalThorn\\]|\\\\\\[CapitalUAcute\\]|\\\\\\[CapitalUDoubleAcute\\]|\\\\\\[CapitalUDoubleDot\\]|\\\\\\[CapitalUGrave\\]|\\\\\\[CapitalUHat\\]|'+
+            '\\\\\\[CapitalUpsilon\\]|\\\\\\[CapitalURing\\]|\\\\\\[CapitalXi\\]|\\\\\\[CapitalYAcute\\]|\\\\\\[CapitalZeta\\]|\\\\\\[CapitalZHacek\\]|\\\\\\[Cap\\]|\\\\\\[CCedilla\\]'+
+            '|\\\\\\[Cedilla\\]|\\\\\\[CenterDot\\]|\\\\\\[CenterEllipsis\\]|\\\\\\[Cent\\]|\\\\\\[CHacek\\]|\\\\\\[Checkmark\\]|\\\\\\[Chi\\]|'+
+            '\\\\\\[CircleDot\\]|\\\\\\[CircleMinus\\]|\\\\\\[CirclePlus\\]|\\\\\\[CircleTimes\\]|\\\\\\[ClockwiseContourIntegral\\]|\\\\\\[CloseCurlyDoubleQuote\\]|\\\\\\[CloseCurlyQuote\\]|\\\\\\[CloverLeaf\\]'+
+            '|\\\\\\[ClubSuit\\]|\\\\\\[Colon\\]|\\\\\\[CommandKey\\]|\\\\\\[Congruent\\]|\\\\\\[Conjugate\\]|\\\\\\[ConjugateTranspose\\]|\\\\\\[ConstantC\\]|'+
+            '\\\\\\[Continuation\\]|\\\\\\[ContourIntegral\\]|\\\\\\[ControlKey\\]|\\\\\\[Coproduct\\]|\\\\\\[Copyright\\]|\\\\\\[CounterClockwiseContourIntegral\\]|\\\\\\[Cross\\]|\\\\\\[CupCap\\]'+
+            '|\\\\\\[Cup\\]|\\\\\\[CurlyCapitalUpsilon\\]|\\\\\\[CurlyEpsilon\\]|\\\\\\[CurlyKappa\\]|\\\\\\[CurlyPhi\\]|\\\\\\[CurlyPi\\]|\\\\\\[CurlyRho\\]|'+
+            '\\\\\\[CurlyTheta\\]|\\\\\\[Currency\\]|\\\\\\[Dagger\\]|\\\\\\[Dalet\\]|\\\\\\[Dash\\]|\\\\\\[Degree\\]|\\\\\\[DeleteKey\\]|\\\\\\[Del\\]'+
+            '|\\\\\\[Delta\\]|\\\\\\[DescendingEllipsis\\]|\\\\\\[DHacek\\]|\\\\\\[Diameter\\]|\\\\\\[Diamond\\]|\\\\\\[DiamondSuit\\]|\\\\\\[DifferenceDelta\\]|'+
+            '\\\\\\[DifferentialD\\]|\\\\\\[Digamma\\]|\\\\\\[DiscreteRatio\\]|\\\\\\[DiscreteShift\\]|\\\\\\[DiscretionaryHyphen\\]|\\\\\\[DiscretionaryLineSeparator\\]|\\\\\\[DiscretionaryParagraphSeparator\\]|\\\\\\[Divide\\]'+
+            '|\\\\\\[DotEqual\\]|\\\\\\[DotlessI\\]|\\\\\\[DotlessJ\\]|\\\\\\[DottedSquare\\]|\\\\\\[DoubleContourIntegral\\]|\\\\\\[DoubleDagger\\]|\\\\\\[DoubledGamma\\]|'+
+            '\\\\\\[DoubleDownArrow\\]|\\\\\\[DoubledPi\\]|\\\\\\[DoubleLeftArrow\\]|\\\\\\[DoubleLeftRightArrow\\]|\\\\\\[DoubleLeftTee\\]|\\\\\\[DoubleLongLeftArrow\\]|\\\\\\[DoubleLongLeftRightArrow\\]|\\\\\\[DoubleLongRightArrow\\]'+
+            '|\\\\\\[DoublePrime\\]|\\\\\\[DoubleRightArrow\\]|\\\\\\[DoubleRightTee\\]|\\\\\\[DoubleStruckA\\]|\\\\\\[DoubleStruckB\\]|\\\\\\[DoubleStruckC\\]|\\\\\\[DoubleStruckCapitalA\\]|'+
+            '\\\\\\[DoubleStruckCapitalB\\]|\\\\\\[DoubleStruckCapitalC\\]|\\\\\\[DoubleStruckCapitalD\\]|\\\\\\[DoubleStruckCapitalE\\]|\\\\\\[DoubleStruckCapitalF\\]|\\\\\\[DoubleStruckCapitalG\\]|\\\\\\[DoubleStruckCapitalH\\]|\\\\\\[DoubleStruckCapitalI\\]'+
+            '|\\\\\\[DoubleStruckCapitalJ\\]|\\\\\\[DoubleStruckCapitalK\\]|\\\\\\[DoubleStruckCapitalL\\]|\\\\\\[DoubleStruckCapitalM\\]|\\\\\\[DoubleStruckCapitalN\\]|\\\\\\[DoubleStruckCapitalO\\]|\\\\\\[DoubleStruckCapitalP\\]|'+
+            '\\\\\\[DoubleStruckCapitalQ\\]|\\\\\\[DoubleStruckCapitalR\\]|\\\\\\[DoubleStruckCapitalS\\]|\\\\\\[DoubleStruckCapitalT\\]|\\\\\\[DoubleStruckCapitalU\\]|\\\\\\[DoubleStruckCapitalV\\]|\\\\\\[DoubleStruckCapitalW\\]|\\\\\\[DoubleStruckCapitalX\\]'+
+            '|\\\\\\[DoubleStruckCapitalY\\]|\\\\\\[DoubleStruckCapitalZ\\]|\\\\\\[DoubleStruckD\\]|\\\\\\[DoubleStruckE\\]|\\\\\\[DoubleStruckEight\\]|\\\\\\[DoubleStruckF\\]|\\\\\\[DoubleStruckFive\\]|'+
+            '\\\\\\[DoubleStruckFour\\]|\\\\\\[DoubleStruckG\\]|\\\\\\[DoubleStruckH\\]|\\\\\\[DoubleStruckI\\]|\\\\\\[DoubleStruckJ\\]|\\\\\\[DoubleStruckK\\]|\\\\\\[DoubleStruckL\\]|\\\\\\[DoubleStruckM\\]'+
+            '|\\\\\\[DoubleStruckN\\]|\\\\\\[DoubleStruckNine\\]|\\\\\\[DoubleStruckO\\]|\\\\\\[DoubleStruckOne\\]|\\\\\\[DoubleStruckP\\]|\\\\\\[DoubleStruckQ\\]|\\\\\\[DoubleStruckR\\]|'+
+            '\\\\\\[DoubleStruckS\\]|\\\\\\[DoubleStruckSeven\\]|\\\\\\[DoubleStruckSix\\]|\\\\\\[DoubleStruckT\\]|\\\\\\[DoubleStruckThree\\]|\\\\\\[DoubleStruckTwo\\]|\\\\\\[DoubleStruckU\\]|\\\\\\[DoubleStruckV\\]'+
+            '|\\\\\\[DoubleStruckW\\]|\\\\\\[DoubleStruckX\\]|\\\\\\[DoubleStruckY\\]|\\\\\\[DoubleStruckZ\\]|\\\\\\[DoubleStruckZero\\]|\\\\\\[DoubleUpArrow\\]|\\\\\\[DoubleUpDownArrow\\]|'+
+            '\\\\\\[DoubleVerticalBar\\]|\\\\\\[DownArrowBar\\]|\\\\\\[DownArrow\\]|\\\\\\[DownArrowUpArrow\\]|\\\\\\[DownBreve\\]|\\\\\\[DownExclamation\\]|\\\\\\[DownLeftRightVector\\]|\\\\\\[DownLeftTeeVector\\]'+
+            '|\\\\\\[DownLeftVector\\]|\\\\\\[DownLeftVectorBar\\]|\\\\\\[DownPointer\\]|\\\\\\[DownQuestion\\]|\\\\\\[DownRightTeeVector\\]|\\\\\\[DownRightVector\\]|\\\\\\[DownRightVectorBar\\]|'+
+            '\\\\\\[DownTeeArrow\\]|\\\\\\[DownTee\\]|\\\\\\[EAcute\\]|\\\\\\[Earth\\]|\\\\\\[EBar\\]|\\\\\\[ECup\\]|\\\\\\[EDoubleDot\\]|\\\\\\[EGrave\\]'+
+            '|\\\\\\[EHacek\\]|\\\\\\[EHat\\]|\\\\\\[EighthNote\\]|\\\\\\[Element\\]|\\\\\\[Ellipsis\\]|\\\\\\[EmptyCircle\\]|\\\\\\[EmptyDiamond\\]|'+
+            '\\\\\\[EmptyDownTriangle\\]|\\\\\\[EmptyRectangle\\]|\\\\\\[EmptySet\\]|\\\\\\[EmptySmallCircle\\]|\\\\\\[EmptySmallSquare\\]|\\\\\\[EmptySquare\\]|\\\\\\[EmptyUpTriangle\\]|\\\\\\[EmptyVerySmallSquare\\]'+
+            '|\\\\\\[EnterKey\\]|\\\\\\[EntityEnd\\]|\\\\\\[EntityStart\\]|\\\\\\[Epsilon\\]|\\\\\\[Equal\\]|\\\\\\[EqualTilde\\]|\\\\\\[Equilibrium\\]|'+
+            '\\\\\\[Equivalent\\]|\\\\\\[ErrorIndicator\\]|\\\\\\[EscapeKey\\]|\\\\\\[Eta\\]|\\\\\\[Eth\\]|\\\\\\[Euro\\]|\\\\\\[Exists\\]|\\\\\\[ExponentialE\\]'+
+            '|\\\\\\[FiLigature\\]|\\\\\\[FilledCircle\\]|\\\\\\[FilledDiamond\\]|\\\\\\[FilledDownTriangle\\]|\\\\\\[FilledLeftTriangle\\]|\\\\\\[FilledRectangle\\]|\\\\\\[FilledRightTriangle\\]|'+
+            '\\\\\\[FilledSmallCircle\\]|\\\\\\[FilledSmallSquare\\]|\\\\\\[FilledSquare\\]|\\\\\\[FilledUpTriangle\\]|\\\\\\[FilledVerySmallSquare\\]|\\\\\\[FinalSigma\\]|\\\\\\[FirstPage\\]|\\\\\\[FivePointedStar\\]'+
+            '|\\\\\\[Flat\\]|\\\\\\[FlLigature\\]|\\\\\\[Florin\\]|\\\\\\[ForAll\\]|\\\\\\[FormalA\\]|\\\\\\[FormalB\\]|\\\\\\[FormalC\\]|'+
+            '\\\\\\[FormalCapitalA\\]|\\\\\\[FormalCapitalB\\]|\\\\\\[FormalCapitalC\\]|\\\\\\[FormalCapitalD\\]|\\\\\\[FormalCapitalE\\]|\\\\\\[FormalCapitalF\\]|\\\\\\[FormalCapitalG\\]|\\\\\\[FormalCapitalH\\]'+
+            '|\\\\\\[FormalCapitalI\\]|\\\\\\[FormalCapitalJ\\]|\\\\\\[FormalCapitalK\\]|\\\\\\[FormalCapitalL\\]|\\\\\\[FormalCapitalM\\]|\\\\\\[FormalCapitalN\\]|\\\\\\[FormalCapitalO\\]|'+
+            '\\\\\\[FormalCapitalP\\]|\\\\\\[FormalCapitalQ\\]|\\\\\\[FormalCapitalR\\]|\\\\\\[FormalCapitalS\\]|\\\\\\[FormalCapitalT\\]|\\\\\\[FormalCapitalU\\]|\\\\\\[FormalCapitalV\\]|\\\\\\[FormalCapitalW\\]'+
+            '|\\\\\\[FormalCapitalX\\]|\\\\\\[FormalCapitalY\\]|\\\\\\[FormalCapitalZ\\]|\\\\\\[FormalD\\]|\\\\\\[FormalE\\]|\\\\\\[FormalF\\]|\\\\\\[FormalG\\]|'+
+            '\\\\\\[FormalH\\]|\\\\\\[FormalI\\]|\\\\\\[FormalJ\\]|\\\\\\[FormalK\\]|\\\\\\[FormalL\\]|\\\\\\[FormalM\\]|\\\\\\[FormalN\\]|\\\\\\[FormalO\\]'+
+            '|\\\\\\[FormalP\\]|\\\\\\[FormalQ\\]|\\\\\\[FormalR\\]|\\\\\\[FormalS\\]|\\\\\\[FormalT\\]|\\\\\\[FormalU\\]|\\\\\\[FormalV\\]|'+
+            '\\\\\\[FormalW\\]|\\\\\\[FormalX\\]|\\\\\\[FormalY\\]|\\\\\\[FormalZ\\]|\\\\\\[FreakedSmiley\\]|\\\\\\[Function\\]|\\\\\\[Gamma\\]|\\\\\\[Gimel\\]'+
+            '|\\\\\\[GothicA\\]|\\\\\\[GothicB\\]|\\\\\\[GothicC\\]|\\\\\\[GothicCapitalA\\]|\\\\\\[GothicCapitalB\\]|\\\\\\[GothicCapitalC\\]|\\\\\\[GothicCapitalD\\]|'+
+            '\\\\\\[GothicCapitalE\\]|\\\\\\[GothicCapitalF\\]|\\\\\\[GothicCapitalG\\]|\\\\\\[GothicCapitalH\\]|\\\\\\[GothicCapitalI\\]|\\\\\\[GothicCapitalJ\\]|\\\\\\[GothicCapitalK\\]|\\\\\\[GothicCapitalL\\]'+
+            '|\\\\\\[GothicCapitalM\\]|\\\\\\[GothicCapitalN\\]|\\\\\\[GothicCapitalO\\]|\\\\\\[GothicCapitalP\\]|\\\\\\[GothicCapitalQ\\]|\\\\\\[GothicCapitalR\\]|\\\\\\[GothicCapitalS\\]|'+
+            '\\\\\\[GothicCapitalT\\]|\\\\\\[GothicCapitalU\\]|\\\\\\[GothicCapitalV\\]|\\\\\\[GothicCapitalW\\]|\\\\\\[GothicCapitalX\\]|\\\\\\[GothicCapitalY\\]|\\\\\\[GothicCapitalZ\\]|\\\\\\[GothicD\\]'+
+            '|\\\\\\[GothicE\\]|\\\\\\[GothicEight\\]|\\\\\\[GothicF\\]|\\\\\\[GothicFive\\]|\\\\\\[GothicFour\\]|\\\\\\[GothicG\\]|\\\\\\[GothicH\\]|'+
+            '\\\\\\[GothicI\\]|\\\\\\[GothicJ\\]|\\\\\\[GothicK\\]|\\\\\\[GothicL\\]|\\\\\\[GothicM\\]|\\\\\\[GothicN\\]|\\\\\\[GothicNine\\]|\\\\\\[GothicO\\]'+
+            '|\\\\\\[GothicOne\\]|\\\\\\[GothicP\\]|\\\\\\[GothicQ\\]|\\\\\\[GothicR\\]|\\\\\\[GothicS\\]|\\\\\\[GothicSeven\\]|\\\\\\[GothicSix\\]|'+
+            '\\\\\\[GothicT\\]|\\\\\\[GothicThree\\]|\\\\\\[GothicTwo\\]|\\\\\\[GothicU\\]|\\\\\\[GothicV\\]|\\\\\\[GothicW\\]|\\\\\\[GothicX\\]|\\\\\\[GothicY\\]'+
+            '|\\\\\\[GothicZ\\]|\\\\\\[GothicZero\\]|\\\\\\[GrayCircle\\]|\\\\\\[GraySquare\\]|\\\\\\[GreaterEqualLess\\]|\\\\\\[GreaterEqual\\]|\\\\\\[GreaterFullEqual\\]|'+
+            '\\\\\\[GreaterGreater\\]|\\\\\\[GreaterLess\\]|\\\\\\[GreaterSlantEqual\\]|\\\\\\[GreaterTilde\\]|\\\\\\[Hacek\\]|\\\\\\[HappySmiley\\]|\\\\\\[HBar\\]|\\\\\\[HeartSuit\\]'+
+            '|\\\\\\[HermitianConjugate\\]|\\\\\\[HorizontalLine\\]|\\\\\\[HumpDownHump\\]|\\\\\\[HumpEqual\\]|\\\\\\[Hyphen\\]|\\\\\\[IAcute\\]|\\\\\\[ICup\\]|'+
+            '\\\\\\[IDoubleDot\\]|\\\\\\[IGrave\\]|\\\\\\[IHat\\]|\\\\\\[ImaginaryI\\]|\\\\\\[ImaginaryJ\\]|\\\\\\[ImplicitPlus\\]|\\\\\\[Implies\\]|\\\\\\[IndentingNewLine\\]'+
+            '|\\\\\\[Infinity\\]|\\\\\\[Integral\\]|\\\\\\[Intersection\\]|\\\\\\[InvisibleApplication\\]|\\\\\\[InvisibleComma\\]|\\\\\\[InvisiblePostfixScriptBase\\]|\\\\\\[InvisiblePrefixScriptBase\\]|'+
+            '\\\\\\[InvisibleSpace\\]|\\\\\\[InvisibleTimes\\]|\\\\\\[Iota\\]|\\\\\\[Jupiter\\]|\\\\\\[Kappa\\]|\\\\\\[KernelIcon\\]|\\\\\\[Koppa\\]|\\\\\\[Lambda\\]'+
+            '|\\\\\\[LastPage\\]|\\\\\\[LeftAngleBracket\\]|\\\\\\[LeftArrowBar\\]|\\\\\\[LeftArrow\\]|\\\\\\[LeftArrowRightArrow\\]|\\\\\\[LeftBracketingBar\\]|\\\\\\[LeftCeiling\\]|'+
+            '\\\\\\[LeftDoubleBracket\\]|\\\\\\[LeftDoubleBracketingBar\\]|\\\\\\[LeftDownTeeVector\\]|\\\\\\[LeftDownVectorBar\\]|\\\\\\[LeftDownVector\\]|\\\\\\[LeftFloor\\]|\\\\\\[LeftGuillemet\\]|\\\\\\[LeftModified\\]'+
+            '|\\\\\\[LeftPointer\\]|\\\\\\[LeftRightArrow\\]|\\\\\\[LeftRightVector\\]|\\\\\\[LeftSkeleton\\]|\\\\\\[LeftTee\\]|\\\\\\[LeftTeeArrow\\]|\\\\\\[LeftTeeVector\\]|'+
+            '\\\\\\[LeftTriangle\\]|\\\\\\[LeftTriangleBar\\]|\\\\\\[LeftTriangleEqual\\]|\\\\\\[LeftUpDownVector\\]|\\\\\\[LeftUpTeeVector\\]|\\\\\\[LeftUpVector\\]|\\\\\\[LeftUpVectorBar\\]|\\\\\\[LeftVector\\]'+
+            '|\\\\\\[LeftVectorBar\\]|\\\\\\[LessEqual\\]|\\\\\\[LessEqualGreater\\]|\\\\\\[LessFullEqual\\]|\\\\\\[LessGreater\\]|\\\\\\[LessLess\\]|\\\\\\[LessSlantEqual\\]|'+
+            '\\\\\\[LessTilde\\]|\\\\\\[LetterSpace\\]|\\\\\\[LightBulb\\]|\\\\\\[LineSeparator\\]|\\\\\\[LongDash\\]|\\\\\\[LongEqual\\]|\\\\\\[LongLeftArrow\\]|\\\\\\[LongLeftRightArrow\\]'+
+            '|\\\\\\[LongRightArrow\\]|\\\\\\[LowerLeftArrow\\]|\\\\\\[LowerRightArrow\\]|\\\\\\[LSlash\\]|\\\\\\[Mars\\]|\\\\\\[MathematicaIcon\\]|\\\\\\[MeasuredAngle\\]|'+
+            '\\\\\\[MediumSpace\\]|\\\\\\[Mercury\\]|\\\\\\[Mho\\]|\\\\\\[Micro\\]|\\\\\\[MinusPlus\\]|\\\\\\[Mu\\]|\\\\\\[Nand\\]|\\\\\\[Natural\\]'+
+            '|\\\\\\[NegativeMediumSpace\\]|\\\\\\[NegativeThickSpace\\]|\\\\\\[NegativeThinSpace\\]|\\\\\\[NegativeVeryThinSpace\\]|\\\\\\[Neptune\\]|\\\\\\[NestedGreaterGreater\\]|\\\\\\[NestedLessLess\\]|'+
+            '\\\\\\[NeutralSmiley\\]|\\\\\\[NewLine\\]|\\\\\\[NHacek\\]|\\\\\\[NoBreak\\]|\\\\\\[NonBreakingSpace\\]|\\\\\\[Nor\\]|\\\\\\[NotCongruent\\]|\\\\\\[NotCupCap\\]'+
+            '|\\\\\\[NotDoubleVerticalBar\\]|\\\\\\[NotElement\\]|\\\\\\[NotEqual\\]|\\\\\\[NotEqualTilde\\]|\\\\\\[NotExists\\]|\\\\\\[NotGreater\\]|\\\\\\[NotGreaterEqual\\]|'+
+            '\\\\\\[NotGreaterFullEqual\\]|\\\\\\[NotGreaterGreater\\]|\\\\\\[NotGreaterLess\\]|\\\\\\[NotGreaterSlantEqual\\]|\\\\\\[NotGreaterTilde\\]|\\\\\\[NotHumpDownHump\\]|\\\\\\[NotHumpEqual\\]|\\\\\\[NotLeftTriangle\\]'+
+            '|\\\\\\[NotLeftTriangleBar\\]|\\\\\\[NotLeftTriangleEqual\\]|\\\\\\[NotLessEqual\\]|\\\\\\[NotLessFullEqual\\]|\\\\\\[NotLessGreater\\]|\\\\\\[NotLess\\]|\\\\\\[NotLessLess\\]|'+
+            '\\\\\\[NotLessSlantEqual\\]|\\\\\\[NotLessTilde\\]|\\\\\\[Not\\]|\\\\\\[NotNestedGreaterGreater\\]|\\\\\\[NotNestedLessLess\\]|\\\\\\[NotPrecedes\\]|\\\\\\[NotPrecedesEqual\\]|\\\\\\[NotPrecedesSlantEqual\\]'+
+            '|\\\\\\[NotPrecedesTilde\\]|\\\\\\[NotReverseElement\\]|\\\\\\[NotRightTriangle\\]|\\\\\\[NotRightTriangleBar\\]|\\\\\\[NotRightTriangleEqual\\]|\\\\\\[NotSquareSubset\\]|\\\\\\[NotSquareSubsetEqual\\]|'+
+            '\\\\\\[NotSquareSuperset\\]|\\\\\\[NotSquareSupersetEqual\\]|\\\\\\[NotSubset\\]|\\\\\\[NotSubsetEqual\\]|\\\\\\[NotSucceeds\\]|\\\\\\[NotSucceedsEqual\\]|\\\\\\[NotSucceedsSlantEqual\\]|\\\\\\[NotSucceedsTilde\\]'+
+            '|\\\\\\[NotSuperset\\]|\\\\\\[NotSupersetEqual\\]|\\\\\\[NotTilde\\]|\\\\\\[NotTildeEqual\\]|\\\\\\[NotTildeFullEqual\\]|\\\\\\[NotTildeTilde\\]|\\\\\\[NotVerticalBar\\]|'+
+            '\\\\\\[NTilde\\]|\\\\\\[Nu\\]|\\\\\\[Null\\]|\\\\\\[NumberSign\\]|\\\\\\[OAcute\\]|\\\\\\[ODoubleAcute\\]|\\\\\\[ODoubleDot\\]|\\\\\\[OE\\]'+
+            '|\\\\\\[OGrave\\]|\\\\\\[OHat\\]|\\\\\\[Omega\\]|\\\\\\[Omicron\\]|\\\\\\[OpenCurlyDoubleQuote\\]|\\\\\\[OpenCurlyQuote\\]|\\\\\\[OptionKey\\]|'+
+            '\\\\\\[Or\\]|\\\\\\[OSlash\\]|\\\\\\[OTilde\\]|\\\\\\[OverBrace\\]|\\\\\\[OverBracket\\]|\\\\\\[OverParenthesis\\]|\\\\\\[Paragraph\\]|\\\\\\[ParagraphSeparator\\]'+
+            '|\\\\\\[PartialD\\]|\\\\\\[Phi\\]|\\\\\\[Pi\\]|\\\\\\[Piecewise\\]|\\\\\\[Placeholder\\]|\\\\\\[PlusMinus\\]|\\\\\\[Pluto\\]|'+
+            '\\\\\\[Precedes\\]|\\\\\\[PrecedesEqual\\]|\\\\\\[PrecedesSlantEqual\\]|\\\\\\[PrecedesTilde\\]|\\\\\\[Prime\\]|\\\\\\[Product\\]|\\\\\\[Proportion\\]|\\\\\\[Proportional\\]'+
+            '|\\\\\\[Psi\\]|\\\\\\[QuarterNote\\]|\\\\\\[RawAmpersand\\]|\\\\\\[RawAt\\]|\\\\\\[RawBackquote\\]|\\\\\\[RawBackslash\\]|\\\\\\[RawColon\\]|'+
+            '\\\\\\[RawComma\\]|\\\\\\[RawDash\\]|\\\\\\[RawDollar\\]|\\\\\\[RawDot\\]|\\\\\\[RawDoubleQuote\\]|\\\\\\[RawEqual\\]|\\\\\\[RawEscape\\]|\\\\\\[RawExclamation\\]'+
+            '|\\\\\\[RawGreater\\]|\\\\\\[RawLeftBrace\\]|\\\\\\[RawLeftBracket\\]|\\\\\\[RawLeftParenthesis\\]|\\\\\\[RawLess\\]|\\\\\\[RawNumberSign\\]|\\\\\\[RawPercent\\]|'+
+            '\\\\\\[RawPlus\\]|\\\\\\[RawQuestion\\]|\\\\\\[RawQuote\\]|\\\\\\[RawReturn\\]|\\\\\\[RawRightBrace\\]|\\\\\\[RawRightBracket\\]|\\\\\\[RawRightParenthesis\\]|\\\\\\[RawSemicolon\\]'+
+            '|\\\\\\[RawSlash\\]|\\\\\\[RawSpace\\]|\\\\\\[RawStar\\]|\\\\\\[RawTab\\]|\\\\\\[RawTilde\\]|\\\\\\[RawUnderscore\\]|\\\\\\[RawVerticalBar\\]|'+
+            '\\\\\\[RawWedge\\]|\\\\\\[RegisteredTrademark\\]|\\\\\\[ReturnIndicator\\]|\\\\\\[ReturnKey\\]|\\\\\\[ReverseDoublePrime\\]|\\\\\\[ReverseElement\\]|\\\\\\[ReverseEquilibrium\\]|\\\\\\[ReversePrime\\]'+
+            '|\\\\\\[ReverseUpEquilibrium\\]|\\\\\\[RHacek\\]|\\\\\\[Rho\\]|\\\\\\[RightAngle\\]|\\\\\\[RightAngleBracket\\]|\\\\\\[RightArrow\\]|\\\\\\[RightArrowBar\\]|'+
+            '\\\\\\[RightArrowLeftArrow\\]|\\\\\\[RightBracketingBar\\]|\\\\\\[RightCeiling\\]|\\\\\\[RightDoubleBracket\\]|\\\\\\[RightDoubleBracketingBar\\]|\\\\\\[RightDownTeeVector\\]|\\\\\\[RightDownVector\\]|\\\\\\[RightDownVectorBar\\]'+
+            '|\\\\\\[RightFloor\\]|\\\\\\[RightGuillemet\\]|\\\\\\[RightModified\\]|\\\\\\[RightPointer\\]|\\\\\\[RightSkeleton\\]|\\\\\\[RightTee\\]|\\\\\\[RightTeeArrow\\]|'+
+            '\\\\\\[RightTeeVector\\]|\\\\\\[RightTriangle\\]|\\\\\\[RightTriangleBar\\]|\\\\\\[RightTriangleEqual\\]|\\\\\\[RightUpDownVector\\]|\\\\\\[RightUpTeeVector\\]|\\\\\\[RightUpVector\\]|\\\\\\[RightUpVectorBar\\]'+
+            '|\\\\\\[RightVector\\]|\\\\\\[RightVectorBar\\]|\\\\\\[RoundImplies\\]|\\\\\\[RoundSpaceIndicator\\]|\\\\\\[Rule\\]|\\\\\\[RuleDelayed\\]|\\\\\\[SadSmiley\\]|'+
+            '\\\\\\[Sampi\\]|\\\\\\[Saturn\\]|\\\\\\[ScriptA\\]|\\\\\\[ScriptB\\]|\\\\\\[ScriptC\\]|\\\\\\[ScriptCapitalA\\]|\\\\\\[ScriptCapitalB\\]|\\\\\\[ScriptCapitalC\\]'+
+            '|\\\\\\[ScriptCapitalD\\]|\\\\\\[ScriptCapitalE\\]|\\\\\\[ScriptCapitalF\\]|\\\\\\[ScriptCapitalG\\]|\\\\\\[ScriptCapitalH\\]|\\\\\\[ScriptCapitalI\\]|\\\\\\[ScriptCapitalJ\\]|'+
+            '\\\\\\[ScriptCapitalK\\]|\\\\\\[ScriptCapitalL\\]|\\\\\\[ScriptCapitalM\\]|\\\\\\[ScriptCapitalN\\]|\\\\\\[ScriptCapitalO\\]|\\\\\\[ScriptCapitalP\\]|\\\\\\[ScriptCapitalQ\\]|\\\\\\[ScriptCapitalR\\]'+
+            '|\\\\\\[ScriptCapitalS\\]|\\\\\\[ScriptCapitalT\\]|\\\\\\[ScriptCapitalU\\]|\\\\\\[ScriptCapitalV\\]|\\\\\\[ScriptCapitalW\\]|\\\\\\[ScriptCapitalX\\]|\\\\\\[ScriptCapitalY\\]|'+
+            '\\\\\\[ScriptCapitalZ\\]|\\\\\\[ScriptD\\]|\\\\\\[ScriptDotlessI\\]|\\\\\\[ScriptDotlessJ\\]|\\\\\\[ScriptE\\]|\\\\\\[ScriptEight\\]|\\\\\\[ScriptF\\]|\\\\\\[ScriptFive\\]'+
+            '|\\\\\\[ScriptFour\\]|\\\\\\[ScriptG\\]|\\\\\\[ScriptH\\]|\\\\\\[ScriptI\\]|\\\\\\[ScriptJ\\]|\\\\\\[ScriptK\\]|\\\\\\[ScriptL\\]|'+
+            '\\\\\\[ScriptM\\]|\\\\\\[ScriptN\\]|\\\\\\[ScriptNine\\]|\\\\\\[ScriptO\\]|\\\\\\[ScriptOne\\]|\\\\\\[ScriptP\\]|\\\\\\[ScriptQ\\]|\\\\\\[ScriptR\\]'+
+            '|\\\\\\[ScriptS\\]|\\\\\\[ScriptSeven\\]|\\\\\\[ScriptSix\\]|\\\\\\[ScriptT\\]|\\\\\\[ScriptThree\\]|\\\\\\[ScriptTwo\\]|\\\\\\[ScriptU\\]|'+
+            '\\\\\\[ScriptV\\]|\\\\\\[ScriptW\\]|\\\\\\[ScriptX\\]|\\\\\\[ScriptY\\]|\\\\\\[ScriptZ\\]|\\\\\\[ScriptZero\\]|\\\\\\[Section\\]|\\\\\\[SelectionPlaceholder\\]'+
+            '|\\\\\\[SHacek\\]|\\\\\\[Sharp\\]|\\\\\\[ShortLeftArrow\\]|\\\\\\[ShortRightArrow\\]|\\\\\\[Sigma\\]|\\\\\\[SixPointedStar\\]|\\\\\\[SkeletonIndicator\\]|'+
+            '\\\\\\[SmallCircle\\]|\\\\\\[SpaceIndicator\\]|\\\\\\[SpaceKey\\]|\\\\\\[SpadeSuit\\]|\\\\\\[SpanFromAbove\\]|\\\\\\[SpanFromBoth\\]|\\\\\\[SpanFromLeft\\]|\\\\\\[SphericalAngle\\]'+
+            '|\\\\\\[Sqrt\\]|\\\\\\[Square\\]|\\\\\\[SquareIntersection\\]|\\\\\\[SquareSubset\\]|\\\\\\[SquareSubsetEqual\\]|\\\\\\[SquareSuperset\\]|\\\\\\[SquareSupersetEqual\\]|'+
+            '\\\\\\[SquareUnion\\]|\\\\\\[Star\\]|\\\\\\[Sterling\\]|\\\\\\[Stigma\\]|\\\\\\[Subset\\]|\\\\\\[SubsetEqual\\]|\\\\\\[Succeeds\\]|\\\\\\[SucceedsEqual\\]'+
+            '|\\\\\\[SucceedsSlantEqual\\]|\\\\\\[SucceedsTilde\\]|\\\\\\[SuchThat\\]|\\\\\\[Sum\\]|\\\\\\[Superset\\]|\\\\\\[SupersetEqual\\]|\\\\\\[SystemEnterKey\\]|'+
+            '\\\\\\[SZ\\]|\\\\\\[TabKey\\]|\\\\\\[Tau\\]|\\\\\\[THacek\\]|\\\\\\[Therefore\\]|\\\\\\[Theta\\]|\\\\\\[ThickSpace\\]|\\\\\\[ThinSpace\\]'+
+            '|\\\\\\[Thorn\\]|\\\\\\[Tilde\\]|\\\\\\[TildeEqual\\]|\\\\\\[TildeFullEqual\\]|\\\\\\[TildeTilde\\]|\\\\\\[Times\\]|\\\\\\[Trademark\\]|'+
+            '\\\\\\[Transpose\\]|\\\\\\[UAcute\\]|\\\\\\[UDoubleAcute\\]|\\\\\\[UDoubleDot\\]|\\\\\\[UGrave\\]|\\\\\\[UHat\\]|\\\\\\[UnderBrace\\]|\\\\\\[UnderBracket\\]'+
+            '|\\\\\\[UnderParenthesis\\]|\\\\\\[Union\\]|\\\\\\[UnionPlus\\]|\\\\\\[UpArrow\\]|\\\\\\[UpArrowBar\\]|\\\\\\[UpArrowDownArrow\\]|\\\\\\[UpDownArrow\\]|'+
+            '\\\\\\[UpEquilibrium\\]|\\\\\\[UpperLeftArrow\\]|\\\\\\[UpperRightArrow\\]|\\\\\\[UpPointer\\]|\\\\\\[Upsilon\\]|\\\\\\[UpTee\\]|\\\\\\[UpTeeArrow\\]|\\\\\\[Uranus\\]'+
+            '|\\\\\\[URing\\]|\\\\\\[Vee\\]|\\\\\\[Venus\\]|\\\\\\[VerticalBar\\]|\\\\\\[VerticalEllipsis\\]|\\\\\\[VerticalLine\\]|\\\\\\[VerticalSeparator\\]|'+
+            '\\\\\\[VerticalTilde\\]|\\\\\\[VeryThinSpace\\]|\\\\\\[WarningSign\\]|\\\\\\[WatchIcon\\]|\\\\\\[Wedge\\]|\\\\\\[WeierstrassP\\]|\\\\\\[Wolf\\]|\\\\\\[Xi\\]';
+
+
+
         var shortcutStylePatterns = [
             // Whitespaces, linebreaks, tabs
             [PR.PR_PLAIN,   /^[\t\n\r \xA0]+/, null, '\t\n\r \xA0'],
@@ -157,23 +306,55 @@ inject(function () {
 
         var fallthroughStylePatterns = [
 
+            // this makes a look-ahead match for something like variable:{_Integer}
+            // the second part of this rule can be found below. I had to split this since
+            // prettify has a two step tokenizer.
+            [PR.PR_ATTRIB_VALUE, /^[a-zA-Z\$]+[a-zA-Z0-9\$]*:(?=[a-zA-Z\$\[\]\{\}\(\)])/,null],
+
+
             // Flat comments. Start with (* and end with *). Can go over several lines and must not be nested.
             [PR.PR_COMMENT, /^\(\*[\s\S]*?\*\)/, null],
+
+            // Named characters in Mathematica, like \[Gamma]. This list was created with:
+            //page = Import[
+            //    "http://reference.wolfram.com/mathematica/guide/\
+            //    ListingOfNamedCharacters.html", {"HTML",
+            //        "Plaintext"}]; namedCharacters =
+            //StringReplace[
+            //    StringCases[page,
+            //        "\\[" ~~ Shortest[__] ~~ "]"], {"\\" -> "\\\\\\\\", "[" -> "\\\\[",
+            //"]" -> "\\\\]"}];
+            //Export["google-code-prettify/namedcharacters.txt", StringJoin @@ Riffle[Apply[StringJoin,
+            //Partition[Riffle[namedCharacters, "|"], 15], {1}],
+            //"'+ \n '"], "TEXT"]
+            [PR.PR_ATTRIB_NAME, new RegExp('^(?:' + namedCharacters + ')'), null],
 
             // Match all braces separately
             [PR.PR_TAG, /^(?:\[|\]|{|}|\(|\))/,null],
 
-            // match mathematica numbers.
+            // Match various forms of numbers.
             [PR.PR_LITERAL, new RegExp(
                 '^(?:'
-                    // BaseForm notation
-                    + '[0-9]+\\^\\^[a-f0-9]+(\\.[a-f0-9]+)?`?'
+                    // A hex number
+                    + '[0-9]+\\^\\^[a-f0-9]+(\\.[a-f0-9]+)?'
                     // or an octal or decimal number,
-                    + '|(?:[0-9]+\\.|[0-9]*\\.[0-9]+)`?'
+                    + '|[0-9]*\\.[0-9]+'
                     // possibly in scientific notation
-                    + '|[0-9]+`?'
+                    + '[0-9]+'
                     + ')'),
                 null, '0123456789'],
+
+
+
+            // catch variables which are used together with Blank (_), BlankSequence (__) or BlankNullSequence (___)
+            // Cannot start with a number, but can have numbers at any other position. Examples
+            // blub__Integer, a1_, b34_Integer32
+            [PR.PR_ATTRIB_VALUE, /^[a-zA-Z\$]+[a-zA-Z0-9\$]*_+([a-zA-Z\$]+[a-zA-Z0-9\$]*)*/, null],
+            [PR.PR_ATTRIB_VALUE, /^_+([a-zA-Z\$]+[a-zA-Z0-9\$]*)*/, null],
+
+            // Catch Slots (#, ##, #3, ##9). I have never seen someone using more than one digit after #, so we match
+            // only one.
+            [PR.PR_ATTRIB_VALUE, /^(?:#+[0-9]?)/,null],
 
             // The large list of keywords from above
             // created with
@@ -183,20 +364,16 @@ inject(function () {
             //   "|"], 100], {1}], "'+ \n '"], "TEXT"]
             [PR.PR_KEYWORD, new RegExp('^(?:' + keywords + ')\\b'), null],
 
-            // catch variables which are used together with Blank (_), BlankSequence (__) or BlankNullSequence (___)
-            // Cannot start with a number, but can have numbers at any other position. Examples
-            // blub__Integer, a1_, b34_Integer32
-            [PR.PR_ATTRIB_VALUE, /^[a-zA-Z$]+[a-zA-Z0-9$]*_+([a-zA-Z$]+[a-zA-Z0-9$]*)*/, null],
+            // This is the second part of the variable:{_Integer} matcher. This rule matches after the first run of
+            // the tokenizer has split the code into ['variable:', '{', ...]
+            [PR.PR_ATTRIB_VALUE, /^[a-zA-Z\$]+[a-zA-Z0-9\$]*:$/,null],
 
-            // Catch Slots (#, ##, #3, ##9). I have never seen someone using more than one digit after #, so we match
-            // only one.
-            [PR.PR_ATTRIB_VALUE, /^#+[0-9]?/,null],
-
-            // variables, non-keyword functions
-            [PR.PR_PLAIN, /^[a-zA-Z$]+[a-zA-Z0-9$]*/, null],
+            // Literals like variables, non-keyword functions
+            [PR.PR_PLAIN, /^[a-zA-Z\$]+[a-zA-Z0-9\$`]*/, null],
 
             // operators. Note that operators like @@ or /; are matched separately for each symbol.
-            [PR.PR_PLAIN, /^(?:\+|\-|\*|\/|,|;|\.|:|@|~|=|\>|\<|&|\||_|`|\^)/, null]
+            [PR.PR_PUNCTUATION, /^(?:\+|\-|\*|\/|,|;|\.|:|@|~|=|\>|\<|&|\||_|`|\^|\?)/, null]
+
 
         ];
         PR.registerLangHandler(PR.createSimpleLexer(shortcutStylePatterns, fallthroughStylePatterns), ['mathematica']);

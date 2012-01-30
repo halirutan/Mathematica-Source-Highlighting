@@ -7,7 +7,7 @@
 // ==/UserScript==
 
 function inject(f) {
-    if (!/^\/questions\/\d+/.test(window.location.pathname)) {
+    if (!/^\/questions\/(\d+|ask)/.test(window.location.pathname)) {
         return;
     }
 

@@ -3,6 +3,7 @@
 // @description   Adds simple Mathematica highlighting on SO and Mathematica as a POC
 // @include       http://stackoverflow.com/questions/*
 // @include       http://mathematica.stackexchange.com/questions/*
+// @include       http://meta.mathematica.stackexchange.com/questions/*
 // @author        @TimStone (regexp and colors by @halirutan (Patrick))
 // ==/UserScript==
 

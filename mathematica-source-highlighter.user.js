@@ -361,9 +361,7 @@ inject(function () {
 
             // this makes a look-ahead match for something like variable:{_Integer}
             // the match is then forwarded to the mma-patterns tokenizer.
-            ['lang-mma-patterns',/^([a-zA-Z\$]+[a-zA-Z0-9\$]*\s*:)(?:(?:[a-zA-Z\$]+[a-zA-Z0-9\$]*)|(?:[^\+\-\*\/,;\.:@~=><&\|`\^\?]))/, null],
-            //['lang-mma-patterns',/^([a-zA-Z\$]+[a-zA-Z0-9\$]*\s*:)(?:[^\+\-\*\/,;\.:@~=><&\|`\^\?]|[a-zA-Z\$]+[a-zA-Z0-9\$]*)+/, null],
-
+        ['lang-mma-patterns',/^([a-zA-Z\$]+[a-zA-Z0-9\$]*\s*:)(?:(?:[a-zA-Z\$]+[a-zA-Z0-9\$]*)|(?:[^:=>~@\^\&\*\)\[\]'\?,\|])).*/, null],
 
             // catch variables which are used together with Blank (_), BlankSequence (__) or BlankNullSequence (___)
             // Cannot start with a number, but can have numbers at any other position. Examples
@@ -373,17 +371,22 @@ inject(function () {
             [PR.PR_ATTRIB_VALUE, /^_+([a-zA-Z\$]+[a-zA-Z0-9\$]*)*/, null],
 
             // Named characters in Mathematica, like \[Gamma]. This list was created with:
-            //page = Import[
-            //    "http://reference.wolfram.com/mathematica/guide/\
-            //    ListingOfNamedCharacters.html", {"HTML",
-            //        "Plaintext"}]; namedCharacters =
-            //StringReplace[
-            //    StringCases[page,
-            //        "\\[" ~~ Shortest[__] ~~ "]"], {"\\" -> "\\\\\\\\", "[" -> "\\\\[",
-            //"]" -> "\\\\]"}];
-            //Export["google-code-prettify/namedcharacters.txt", StringJoin @@ Riffle[Apply[StringJoin,
-            //Partition[Riffle[namedCharacters, "|"], 15], {1}],
-            //"'+ \n '"], "TEXT"]
+			/*
+			 page = Import[
+			 "http://reference.wolfram.com/mathematica/guide/\
+			 ListingOfNamedCharacters.html", {"HTML", "Plaintext"}];
+			 namedCharacters =
+			 StringReplace[
+			 StringCases[page,
+			 "\\[" ~~ Shortest[__] ~~ "]"], {"\\" -> "\\\\\\\\",
+			 "[" -> "\\\\[", "]" -> "\\\\]"}];
+			 Export["/home/patrick/Documents/projects/IdeaProjects/google-code-\
+			 prettify/namedcharacters.txt",
+			 StringJoin @@
+			 Riffle[Apply[StringJoin,
+			 Partition[Riffle[namedCharacters, "|"], 15, 15, {1, 1}, ""], {1}],
+			 "'+ \n '"], "TEXT"]
+			*/
             [PR.PR_ATTRIB_NAME, new RegExp('^(?:' + namedCharacters + ')'), null],
 
             // Match all braces separately

@@ -3,7 +3,6 @@
 // @description   Adds simple Mathematica highlighting on SO and Mathematica as a POC
 // @include       http://stackoverflow.com/questions/*
 // @include       http://mathematica.stackexchange.com/questions/*
-// @include       http://meta.mathematica.stackexchange.com/questions/*
 // @author        @TimStone (regexp and colors by @halirutan (Patrick))
 // ==/UserScript==
 
@@ -23,9 +22,9 @@
 // 01/23/2012 Initial version.
 //
 
-
 function inject(f) {
     if (!/^\/questions\/(\d+|ask)/.test(window.location.pathname)) {
+
         return;
     }
 
@@ -38,7 +37,7 @@ function inject(f) {
 
 inject(function () {
     StackExchange.ready(function () {
-        var isMathematica = /^mathematica\./.test(window.location.host),
+        var isMathematica = /^(?:meta\.)?mathematica\./.test(window.location.host),
             tags, i;
 
         if (!isMathematica) {
@@ -50,7 +49,7 @@ inject(function () {
                 }
             }
         }
-    
+
         if (isMathematica && StackExchange.options.styleCode) {
             StackExchange.using("prettify", function () {
                 var style = document.createElement('style'), blocks;
@@ -89,12 +88,13 @@ inject(function () {
                 document.getElementsByTagName('head')[0].appendChild(style);
             
                 MathematicaHighlighter();
-                
+
                 document.getElementById('prettify-lang').textContent = 'lang-mathematica';
                 blocks = document.getElementsByTagName('pre');
                 
                 for (i = 0; i < blocks.length; ++i) {
-                    if (blocks[i].children.length && blocks[i].children[0].tagName === 'CODE') {
+
+                    if (blocks[i].className === '' && blocks[i].children.length && blocks[i].children[0].tagName === 'CODE') {
                         blocks[i].className = 'prettyprint lang-mathematica';
                     }
                 }

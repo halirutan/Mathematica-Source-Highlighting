@@ -1,12 +1,28 @@
+// Copyright (C) 2009 Google Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // ==UserScript==
-// @name          SE Mathematica highlighter (halirutan style)
-// @description   Adds simple Mathematica highlighting on SO and Mathematica as a POC
+// @name          SE Mathematica highlighter
+// @description   Adds Mathematica highlighting on StackOverflow and StackExchange as a POC
 // @include       http://stackoverflow.com/questions/*
 // @include       http://mathematica.stackexchange.com/questions/*
-// @author        @TimStone (regexp and colors by @halirutan (Patrick))
+// @author        @TimStone @halirutan
 // ==/UserScript==
 
 // History:
+//
+// 02/01/2012 Implemented the full range of number formats.
 //
 // 01/30/2012 Fixed missing '?' in the operator list. Included named-characters like \[Gamma] to give a complete match
 // for such symbols. Added $variables in the keyword list.

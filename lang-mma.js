@@ -320,8 +320,9 @@
         // Cannot start with a number, but can have numbers at any other position. Examples
         // blub__Integer, a1_, b34_Integer32
         //[PR.PR_ATTRIB_VALUE, new RegExp('^(?:'+p_variable+'|'+namedCharacters+')_+'+p_variable+'*'), null],
-        [PR.PR_ATTRIB_VALUE, /^(?:[a-zA-Z\$]+[a-zA-Z0-9\$]*)_+([a-zA-Z\$]+[a-zA-Z0-9\$]*)*/, null],
-        [PR.PR_ATTRIB_VALUE, /^_+([a-zA-Z\$]+[a-zA-Z0-9\$]*)*/, null],
+        [PR.PR_ATTRIB_VALUE, /^[a-zA-Z\$][a-zA-Z0-9\$]*_+[a-zA-Z\$][a-zA-Z0-9\$]*/, null],
+        [PR.PR_ATTRIB_VALUE, /^[a-zA-Z\$][a-zA-Z0-9\$]*_+/, null],
+        [PR.PR_ATTRIB_VALUE, /^_+[a-zA-Z\$][a-zA-Z0-9\$]*/, null],
 
         // Named characters in Mathematica, like \[Gamma]. This list was created with:
         /*

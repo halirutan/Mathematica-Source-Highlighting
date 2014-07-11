@@ -1,6 +1,6 @@
-#Mathematica and Wolfram Language support for google-code-prettify
-
-This is the official Mathematica and Wolfram Language code highlighter for [Mathematica.stackexchange.com](http://mathematica.stackexchange.com/)
+# Mathematica and Wolfram Language support for google-code-prettify
+ 
+This is the official Mathematica and Wolfram Language code highlighter for [Mathematica.stackexchange.com](mathematica.stackexchange.com/)
 and [the Wolfram Community](http://community.wolfram.com).
 
 To use it with your installation of [google-code-prettify](http://code.google.com/p/google-code-prettify/) you have to

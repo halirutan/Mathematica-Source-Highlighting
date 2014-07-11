@@ -58,9 +58,8 @@ inject(function () {
 
         if (!isMathematica) {
             tags = document.getElementsByClassName('post-tag');
-        
             for (i = 0; i < tags.length; ++i) {
-                if(isMathematica = tags[i].textContent === 'mathematica') {
+                if(isMathematica = tags[i].textContent === 'wolfram-mathematica') {
                     break;
                 }
             }

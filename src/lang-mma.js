@@ -459,7 +459,7 @@
 
         // Catch Slots (#, ##, #3, ##9 and the V10 named slots #name). I have never seen someone using more than one digit after #, so we match
         // only one.
-        [PR.PR_ATTRIB_VALUE, /^(?:#+[0-9]?|#[a-zA-Z][a-zA-Z0-9]*)/,null],
+        [PR.PR_ATTRIB_VALUE, /^(?:#+[0-9]?|#[a-zA-Z\$][a-zA-Z0-9\$]*)/,null],
 
         // The large list of keywords from above can be created with the functions in /resources/Boostrap.m
         [PR.PR_KEYWORD, new RegExp('^(?:' + keywords + ')\\b'), null],

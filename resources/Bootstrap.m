@@ -11,6 +11,7 @@ namedCharacters = StringReplace[StringCases[webpage, "\\[" ~~ Shortest[__] ~~ "]
 
 Print@Export[FileNameJoin[{$thisDirectory, "NamedCharacters.m"}], namedCharacters, PageWidth -> 300];
 
+<<JLink`;
 
 (* The next part creates the list of all builtin functions usually used.*)
 (* In addition to the standard contexts, I include Developer` and Internal` since they contain often used stuff *)
@@ -20,7 +21,7 @@ makeContextNames[context_String] :=
     context ~~ "`" ~~ rest__ :> rest], context];
 
 keywords = Sort[
-  Join[Names[RegularExpression["\$?[A-Z]\\w*"]],
+  Join[Names[RegularExpression["System`\$?[A-Z]\\w*"]],
     makeContextNames["JLink"],
     Names[RegularExpression["(Developer|Internal)`\$?[A-Z]\\w*"]]]];
 

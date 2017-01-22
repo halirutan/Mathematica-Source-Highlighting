@@ -1,4 +1,4 @@
-// Copyright (C) 2014 Patrick Scheibe
+// Copyright (C) 2017 Patrick Scheibe
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,9 @@
  *      <pre class="prettyprint lang-mma"></pre>
  *
  * History:
+ *
+ * 01/22/2017 Updated to Mathematica 11.0.1
+ *
  * 01/22/2016 Update to Mathematica version 10.3.1
  *
  * 07/11/2014 Update to Mathematica version 10
